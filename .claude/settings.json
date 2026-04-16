@@ -1,0 +1,9 @@
+{
+  "skills": {
+    "audit-connect": {
+      "description": "Connects current audited project to audit-system resources and activates the multi-agent audit framework",
+      "type": "prompt",
+      "file": "skills/audit-connect.md"
+    }
+  }
+}

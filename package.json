@@ -1,0 +1,56 @@
+{
+  "name": "audit-system-claude-plugin",
+  "version": "1.0.0",
+  "description": "Multi-agent smart contract security auditing framework for Claude Code",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "install": "node scripts/install.js",
+    "setup": "node scripts/setup.js",
+    "test": "node scripts/test.js"
+  },
+  "keywords": [
+    "smart-contracts",
+    "security",
+    "auditing",
+    "vulnerability",
+    "blockchain",
+    "solidity",
+    "claude-code",
+    "multi-agent"
+  ],
+  "author": "Jorge Paim",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MrAiKen007/audit-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MrAiKen007/audit-system/issues"
+  },
+  "homepage": "https://github.com/MrAiKen007/audit-system#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "fs-extra": "^11.3.4",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "claude": {
+    "type": "plugin",
+    "version": "1.0.0",
+    "compatibility": {
+      "claude-code": ">=1.0.0"
+    },
+    "capabilities": [
+      "multi-agent-analysis",
+      "vulnerability-discovery",
+      "exploit-generation",
+      "automated-testing"
+    ]
+  }
+}

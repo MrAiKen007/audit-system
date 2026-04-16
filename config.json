@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "name": "audit-system",
+  "description": "Multi-agent smart contract security auditing framework",
+  "default_model": "auto-detect",
+  "supported_models": [
+    "claude-opus-4-6",
+    "claude-sonnet-4-6",
+    "claude-haiku-4-5",
+    "kimi-k2.5",
+    "kimi-k2",
+    "gpt-4o",
+    "gpt-4-turbo",
+    "gemini-pro",
+    "gemini-ultra",
+    "local-model"
+  ],
+  "model_config": {
+    "description": "The system will use whatever model is currently active. Override in agent configs if needed.",
+    "recommendation": "Use the most capable model available for complex vulnerability analysis"
+  },
+  "agents_path": "./agents",
+  "skills_path": "./skills",
+  "vault_path": "./obsidian-vault",
+  "workflows": {
+    "novel-discovery": {
+      "description": "6-phase novel vulnerability discovery",
+      "phases": [
+        "assumption-analyzer",
+        "economic-attacker",
+        "state-machine-hacker",
+        "composition-attacker"
+      ]
+    },
+    "full-audit": {
+      "description": "Complete audit with all agents",
+      "agents": [
+        "assumption-analyzer",
+        "economic-attacker",
+        "state-machine-hacker",
+        "composition-attacker",
+        "exploit-writer",
+        "test-generator",
+        "report-writer"
+      ]
+    },
+    "quick-check": {
+      "description": "Fast vulnerability assessment",
+      "agents": [
+        "assumption-analyzer",
+        "economic-attacker"
+      ]
+    }
+  },
+  "commands": {
+    "connect": "/audit-connect",
+    "agent": "/audit-agent",
+    "status": "/audit-status",
+    "agents": "/audit-agents",
+    "phase": "/audit-phase"
+  },
+  "output": {
+    "default_directory": "./audit-output",
+    "formats": ["markdown", "json", "solidity"]
+  }
+}

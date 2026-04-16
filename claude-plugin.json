@@ -1,0 +1,108 @@
+{
+  "manifest_version": 1,
+  "name": "Audit System",
+  "id": "audit-system-security-plugin",
+  "version": "1.0.0",
+  "description": "Multi-agent smart contract security auditing framework with 8 specialized agents and comprehensive vulnerability discovery",
+  "author": "Jorge Paim",
+  "license": "MIT",
+  "repository": "https://github.com/MrAiKen007/audit-system",
+  "claude_code": {
+    "min_version": "1.0.0",
+    "max_version": "*"
+  },
+  "capabilities": [
+    "security_analysis",
+    "vulnerability_scanning",
+    "exploit_generation",
+    "automated_testing",
+    "multi_agent_coordination"
+  ],
+  "categories": [
+    "security",
+    "blockchain",
+    "smart-contracts",
+    "auditing"
+  ],
+  "commands": {
+    "audit-connect": {
+      "description": "Connect audit-system to current project and activate all resources",
+      "usage": "/audit-connect [--mode=full|novel|quick] [--target=./path] [--model=auto]",
+      "examples": [
+        "/audit-connect",
+        "/audit-connect --mode=full",
+        "/audit-connect --target=./contracts --model=claude-opus"
+      ]
+    },
+    "audit-agent": {
+      "description": "Execute specific audit agent",
+      "usage": "/audit-agent <agent-name> [--target=./path]",
+      "examples": [
+        "/audit-agent full",
+        "/audit-agent assumption",
+        "/audit-agent economic",
+        "/audit-agent state",
+        "/audit-agent composition",
+        "/audit-agent exploit",
+        "/audit-agent test",
+        "/audit-agent report"
+      ]
+    },
+    "audit-status": {
+      "description": "Show audit-system connection status",
+      "usage": "/audit-status"
+    },
+    "audit-agents": {
+      "description": "List all available audit agents",
+      "usage": "/audit-agents"
+    }
+  },
+  "installation": {
+    "type": "clone",
+    "source": "https://github.com/MrAiKen007/audit-system.git",
+    "setup_script": "scripts/setup.js",
+    "requirements": [
+      "node >= 16.0.0",
+      "claude-code >= 1.0.0"
+    ]
+  },
+  "configuration": {
+    "config_file": "config.json",
+    "environment_variables": {
+      "AUDIT_SYSTEM_PATH": "Auto-detected from installation",
+      "AUDIT_MODEL": "auto-detect (can be overridden)",
+      "AUDIT_OUTPUT_PATH": "./audit-output"
+    }
+  },
+  "resources": {
+    "agents": 8,
+    "skills": 5,
+    "knowledge_base": "obsidian-vault (14+ files)",
+    "supported_models": [
+      "claude-opus-4-6",
+      "claude-sonnet-4-6", 
+      "claude-haiku-4-5",
+      "kimi-k2.5",
+      "kimi-k2",
+      "gpt-4o",
+      "gpt-4-turbo",
+      "gemini-pro",
+      "gemini-ultra",
+      "local-models"
+    ]
+  },
+  "workflows": {
+    "novel-discovery": {
+      "description": "6-phase novel vulnerability discovery framework",
+      "phases": ["assumption-analyzer", "economic-attacker", "state-machine-hacker", "composition-attacker"]
+    },
+    "full-audit": {
+      "description": "Complete audit with all agents including exploit generation and testing",
+      "agents": ["assumption-analyzer", "economic-attacker", "state-machine-hacker", "composition-attacker", "exploit-writer", "test-generator", "report-writer"]
+    },
+    "quick-check": {
+      "description": "Fast vulnerability assessment",
+      "agents": ["assumption-analyzer", "economic-attacker"]
+    }
+  }
+}
