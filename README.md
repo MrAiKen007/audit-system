@@ -5,11 +5,11 @@ Sistema multi-agente de auditoria de smart contracts com foco em descoberta de v
 **Modelo:** Funciona com QUALQUER modelo de IA - Claude, GPT, Kimi, Gemini, modelos locais, etc. O sistema detecta automaticamente o modelo atual ou permite configuração manual.
 
 **Modelos Testados:**
-- ✅ Claude Opus/Sonnet/Haiku
-- ✅ Kimi K2.5 / K2
-- ✅ GPT-4o / GPT-4 Turbo
-- ✅ Gemini Pro / Ultra
-- ✅ Modelos locais (via API compatível)
+- Claude Opus/Sonnet/Haiku
+- Kimi K2.5 / K2
+- GPT-4o / GPT-4 Turbo
+- Gemini Pro / Ultra
+- Modelos locais (via API compatível)
 
 ## Visão Geral
 
