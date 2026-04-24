@@ -1,7 +1,22 @@
 {
   "skills": {
     "audit-connect": {
-      "description": "Connects current audited project to audit-system resources and activates the multi-agent audit framework",
+      "description": "Connect audit-system to current project and activate all resources",
+      "type": "prompt",
+      "file": "skills/audit-connect.md"
+    },
+    "audit-agent": {
+      "description": "Execute specific audit agent",
+      "type": "prompt",
+      "file": "skills/audit-connect.md"
+    },
+    "audit-status": {
+      "description": "Show audit-system connection status",
+      "type": "prompt",
+      "file": "skills/audit-connect.md"
+    },
+    "audit-agents": {
+      "description": "List all available audit agents",
       "type": "prompt",
       "file": "skills/audit-connect.md"
     }
