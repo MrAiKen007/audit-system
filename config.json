@@ -1,8 +1,10 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "name": "audit-system",
-  "description": "Multi-agent smart contract security auditing framework",
+  "description": "Multi-language multi-agent smart contract security auditing framework",
   "default_model": "auto-detect",
+  "supported_languages": ["solidity", "rust"],
+  "default_language": "auto-detect",
   "supported_models": [
     "claude-opus-4-6",
     "claude-sonnet-4-6",
@@ -18,6 +20,12 @@
   "model_config": {
     "description": "The system will use whatever model is currently active. Override in agent configs if needed.",
     "recommendation": "Use the most capable model available for complex vulnerability analysis"
+  },
+  "language_detection": {
+    "solidity_signals": ["*.sol"],
+    "rust_signals": ["Cargo.toml", "Anchor.toml", "*.rs"],
+    "ink_signals": ["Cargo.toml"],
+    "override_flag": "--lang"
   },
   "agents_path": "./agents",
   "skills_path": "./skills",
@@ -61,6 +69,6 @@
   },
   "output": {
     "default_directory": "./audit-output",
-    "formats": ["markdown", "json", "solidity"]
+    "formats": ["markdown", "json", "solidity", "rust"]
   }
 }

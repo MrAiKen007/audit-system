@@ -112,9 +112,13 @@ Thumbs.db
 
 # Audit System specific
 .audit-output/
+.audit-system/
 installation-record.json
 .claude-installed
 *.log
+
+# npm
+*.tgz
 
 # Temporary files
 tmp/

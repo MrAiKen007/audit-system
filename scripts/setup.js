@@ -218,6 +218,10 @@ Must run \`/audit-connect\` first to activate the system.
     
     console.log(chalk.green('\n=== Setup Complete! ==='));
     console.log(chalk.white('\nThe Audit System plugin is ready for use with Claude Code.'));
+    console.log(chalk.cyan('\nSupported Languages:'));
+    console.log(chalk.cyan('- Solidity (EVM/Foundry) — auto-detected via *.sol'));
+    console.log(chalk.cyan('- Rust (Solana/Anchor) — auto-detected via Cargo.toml + Anchor.toml'));
+    console.log(chalk.cyan('- Rust (ink!/Polkadot) — auto-detected via Cargo.toml + ink deps'));
     console.log(chalk.cyan('\nNext steps:'));
     console.log(chalk.cyan('1. Navigate to any project directory'));
     console.log(chalk.cyan('2. Run: /audit-connect'));

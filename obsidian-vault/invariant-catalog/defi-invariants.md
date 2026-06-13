@@ -291,7 +291,17 @@ Use with:
 
 ---
 
+## Solana-Specific Additions
+
+See [[solana-invariants]] for invariants specific to Solana/Anchor programs:
+- Account model invariants (ownership, discrimination, uniqueness)
+- PDA derivation invariants (canonical bump, seed validation)
+- CPI invariants (program ID validation, return check, reentrancy)
+- SPL token invariants (ownership, mint authority, balance conservation)
+- State machine invariants (discriminator, initialization, close)
+
 ## Links
 - [[attack-patterns/state-inconsistency]] — Many invariants enforce state consistency
 - [[test-strategies/invariant-testing]] — How to test these
 - [[novel-patterns/pattern-mutation-framework]] — Combine invariants for novel attacks
+- [[solana-invariants]] — Solana/Anchor-specific invariants

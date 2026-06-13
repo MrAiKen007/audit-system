@@ -169,12 +169,15 @@ async function install() {
     console.log(chalk.cyan(`- ${skillCount} analysis skills`));
     console.log(chalk.cyan(`- ${vaultCount} knowledge base items`));
     console.log(chalk.cyan(`- Compatible with multiple AI models`));
+    console.log(chalk.cyan(`- Languages: Solidity (EVM) + Rust (Solana/Anchor/ink!)`));
+    console.log(chalk.cyan(`- Auto-detection: detects project language automatically`));
     
     console.log(chalk.cyan('\nNext steps:'));
     console.log(chalk.cyan('1. Run: npm run setup'));
-    console.log(chalk.cyan('2. Navigate to your project directory'));
+    console.log(chalk.cyan('2. Navigate to your project directory (Solidity or Rust/Solana)'));
     console.log(chalk.cyan('3. Run: /audit-connect'));
     console.log(chalk.cyan('4. Start auditing: /audit-agent full'));
+    console.log(chalk.cyan('   Or force language: /audit-connect --lang=rust'));
     
   } catch (error) {
     console.error(chalk.red('\nInstallation failed:'), error.message);

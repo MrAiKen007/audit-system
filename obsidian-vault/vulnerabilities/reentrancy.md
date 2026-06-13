@@ -103,10 +103,35 @@ function withdraw(uint256 amount) external nonReentrant {
 
 ---
 
+## Solana/CPI Reentrancy Variant
+
+In Solana, reentrancy occurs via Cross-Program Invocation (CPI):
+
+```
+Program A calls Program B via invoke() or invoke_signed()
+Program B calls back into Program A during the CPI
+Program A's state is mid-transaction → reads stale data
+```
+
+### Solana Detection
+- CPI to program that can control execution flow
+- State updated AFTER CPI (not before)
+- No reentrancy guard on instruction handlers
+- Callback accounts are not separated
+
+### Solana Fix
+```rust
+// Update state BEFORE CPI call
+ctx.accounts.user.balance = user.balance.checked_sub(amount).unwrap();
+// Then do CPI
+invoke(&transfer_ix, &accounts)?;
+```
+
 ## Real World Examples
-- The DAO Hack (2016) — $60M
-- Cream Finance (2021) — $130M
-- Fei Protocol (2022) — $80M
+- The DAO Hack (2016) — $60M (EVM)
+- Cream Finance (2021) — $130M (EVM)
+- Fei Protocol (2022) — $80M (EVM)
+- Multiple Solana programs with CPI reentrancy
 
 ---
 

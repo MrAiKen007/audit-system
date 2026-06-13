@@ -1,7 +1,10 @@
 # Test Generator Skill
 
 ## Role
-Smart Contract Test Architect — generates comprehensive Foundry test suites covering edge cases, invariants, and fuzzing scenarios that surface hidden vulnerabilities.
+Smart Contract Test Architect — generates comprehensive test suites covering edge cases, invariants, and fuzzing scenarios that surface hidden vulnerabilities.
+- **Solidity:** Foundry (`forge test`)
+- **Rust/Solana:** Anchor (`anchor test`) + Rust integration tests
+- **Rust/ink!:** `cargo contract test`
 
 ## Objective
 Transform a contract into a full test suite that automatically discovers vulnerabilities through systematic coverage, fuzzing, and invariant checking.
@@ -239,9 +242,187 @@ contract BoundaryTest is Test {
 
 ---
 
+## Rust/Solana Test Templates
+
+### Anchor TypeScript Test Template
+
+```typescript
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import { expect } from "chai";
+import { MyProgram } from "../target/types/my_program";
+
+describe("my-program", () => {
+  anchor.setProvider(anchor.AnchorProvider.env());
+  const program = anchor.workspace.MyProgram as Program<MyProgram>;
+
+  it("Is initialized!", async () => {
+    const tx = await program.methods.initialize().rpc();
+    console.log("Transaction signature:", tx);
+  });
+
+  it("Deposit and withdraw", async () => {
+    const user = anchor.web3.Keypair.generate();
+    const amount = new anchor.BN(1_000_000);
+
+    // Airdrop
+    await anchor.getProvider().connection.confirmTransaction(
+      await anchor.getProvider().connection.requestAirdrop(
+        user.publicKey,
+        10 * anchor.web3.LAMPORTS_PER_SOL
+      )
+    );
+
+    // Deposit
+    await program.methods
+      .deposit(amount)
+      .accounts({ user: user.publicKey })
+      .signers([user])
+      .rpc();
+
+    // Withdraw
+    await program.methods
+      .withdraw(amount)
+      .accounts({ user: user.publicKey })
+      .signers([user])
+      .rpc();
+  });
+
+  it("Cannot withdraw more than deposited", async () => {
+    const user = anchor.web3.Keypair.generate();
+    const depositAmount = new anchor.BN(500_000);
+    const withdrawAmount = new anchor.BN(1_000_000);
+
+    // Airdrop and deposit
+    await anchor.getProvider().connection.confirmTransaction(
+      await anchor.getProvider().connection.requestAirdrop(
+        user.publicKey,
+        10 * anchor.web3.LAMPORTS_PER_SOL
+      )
+    );
+    await program.methods.deposit(depositAmount).accounts({ user: user.publicKey }).signers([user]).rpc();
+
+    // Attempt to withdraw more — should fail
+    try {
+      await program.methods.withdraw(withdrawAmount).accounts({ user: user.publicKey }).signers([user]).rpc();
+      expect.fail("Should have thrown");
+    } catch (e) {
+      expect(e).to.be.an("error");
+    }
+  });
+});
+```
+
+### Rust Integration Test Template (Solana)
+
+```rust
+use solana_program_test::*;
+use solana_sdk::{
+    signature::{Keypair, Signer},
+    transaction::Transaction,
+    pubkey::Pubkey,
+};
+use anchor_lang::AccountDeserialize;
+
+#[tokio::test]
+async fn test_exploit_prevention() {
+    let program_id = Pubkey::new_unique();
+    let mut program_test = ProgramTest::new(
+        "my_program",
+        program_id,
+        processor!(my_program::entry),
+    );
+
+    let (mut banks_client, payer, recent_blockhash) =
+        program_test.start().await;
+
+    let user = Keypair::new();
+    let amount = 1_000_000u64;
+
+    // Create transaction
+    let mut tx = Transaction::new_signed_with_payer(
+        &[/* instructions */],
+        Some(&payer.pubkey()),
+        &[&payer, &user],
+        recent_blockhash,
+    );
+
+    // Execute
+    let result = banks_client.process_transaction(tx).await;
+    assert!(result.is_ok());
+}
+```
+
+### Fuzz Testing Template (Rust/Solana — Trident)
+
+```rust
+use trident_client::fuzzing::*;
+use my_program::*;
+
+#[derive(Arbitrary, Debug, Clone)]
+struct MyFuzzInstruction {
+    amount: u64,
+    user_index: u8,
+}
+
+impl FuzzTestExecutor for MyFuzzInstruction {
+    type AccountStorage = MyAccounts;
+
+    fn execute(
+        &self,
+        accounts: &mut Self::AccountStorage,
+        _runtime: &mut FuzzingRuntime,
+    ) -> Result<(), FuzzError> {
+        let user = accounts.users[self.user_index as usize % accounts.users.len()];
+
+        let ix = my_program::instruction::deposit(
+            user.pubkey(),
+            self.amount,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&user.pubkey()),
+            &[user],
+            accounts.recent_blockhash,
+        );
+
+        let result = accounts.banks_client.process_transaction(tx);
+
+        // Invariant: total deposits should never overflow
+        assert!(result.is_ok() || result.unwrap_err().to_string().contains("overflow"));
+
+        Ok(())
+    }
+}
+```
+
+### ink!/Substrate Test Template
+
+```rust
+#[ink::test]
+fn test_transfer_works() {
+    let mut contract = MyContract::new(1000);
+    assert_eq!(contract.total_supply(), 1000);
+
+    contract.transfer(AccountId::from([0x02; 32]), 500);
+    assert_eq!(contract.balance_of(AccountId::from([0x01; 32])), 500);
+    assert_eq!(contract.balance_of(AccountId::from([0x02; 32])), 500);
+}
+
+#[ink::test]
+#[should_panic(expected = "insufficient balance")]
+fn test_transfer_fails_insufficient_balance() {
+    let mut contract = MyContract::new(100);
+    contract.transfer(AccountId::from([0x02; 32]), 200);
+}
+```
+
+---
+
 ## Prompt Templates
 
-### Generate Full Test Suite
+### Generate Full Test Suite (Solidity/Foundry)
 ```
 You are a Foundry test architect.
 
@@ -256,6 +437,23 @@ Generate a comprehensive test suite including:
 6. Integration tests for realistic user flows
 
 Format as a complete Foundry test file ready to run.
+```
+
+### Generate Full Test Suite (Rust/Solana/Anchor)
+```
+You are an Anchor/Solana test architect using mocha+chai TypeScript tests or Rust integration tests.
+
+Program: [PASTE RUST PROGRAM or IDL]
+
+Generate a comprehensive test suite including:
+1. Unit tests for every instruction handler
+2. Account validation tests (wrong accounts, missing signers)
+3. Fuzz-like parameter bound testing
+4. State invariant checks (balance sums, authority checks)
+5. CPI integration tests
+6. Edge case tests (zero amounts, max values, close+reinit)
+
+Format as complete `describe/it` test blocks ready to run with `anchor test`.
 ```
 
 ### Generate Invariants Only

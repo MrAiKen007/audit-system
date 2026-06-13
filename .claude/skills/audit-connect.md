@@ -42,7 +42,7 @@ Ou com parâmetros:
 
 ### 2. **Registra 8 Agents Especializados**
    ```
-   Agents carregados de: C:/Users/Jorge Paim/Desktop/audit-system/audit-system/agents/
+    Agents carregados de: $AUDIT_SYSTEM_PATH/agents/
 
    ✓ orchestrator.json         - Coordenador de workflows
    ✓ assumption-analyzer.json - Phase 1: Quebra de suposições
@@ -111,10 +111,10 @@ Ou com parâmetros:
 
 ### 6. **Configura Variáveis de Ambiente**
    ```
-   AUDIT_SYSTEM_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system"
-   AUDIT_AGENTS_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system/agents"
-   AUDIT_SKILLS_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system/skills"
-   AUDIT_VAULT_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system/obsidian-vault"
+    AUDIT_SYSTEM_PATH="<.audit-system directory>"
+    AUDIT_AGENTS_PATH="$AUDIT_SYSTEM_PATH/agents"
+    AUDIT_SKILLS_PATH="$AUDIT_SYSTEM_PATH/skills"
+    AUDIT_VAULT_PATH="$AUDIT_SYSTEM_PATH/vault"
    AUDIT_MODEL="claude-opus-4-6"
    AUDIT_PROJECT_PATH="<diretório atual>"
    AUDIT_OUTPUT_PATH="./audit-output"

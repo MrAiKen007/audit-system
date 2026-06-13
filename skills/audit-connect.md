@@ -19,6 +19,27 @@ Ativa o audit-system a partir de qualquer diretório de projeto, conectando TODO
 
 Todos os agents são executados com o modelo mais poderoso disponível para garantir análises complexas de vulnerabilidades.
 
+## Detecção Automática de Linguagem
+
+O sistema detecta automaticamente se o projeto alvo usa **Solidity** (EVM) ou **Rust** (Solana/Anchor/ink!):
+
+| Sinal | Linguagem Detectada |
+|-------|-------------------|
+| Arquivos `*.sol` | Solidity |
+| `Anchor.toml` + `Cargo.toml` | Rust (Solana/Anchor) |
+| `Cargo.toml` com dependência `ink` | Rust (ink!/Polkadot) |
+| `Cargo.toml` + pastas `programs/` ou `src/` com `*.rs` | Rust (genérico) |
+| Ambos presentes | Pergunta ao usuário ou roda em modo `both` |
+
+**Override manual:**
+```
+/audit-connect --lang=solidity
+/audit-connect --lang=rust
+/audit-connect --lang=both
+```
+
+A variável `AUDIT_LANG` é definida e todos os agents a consultam para ajustar seus prompts.
+
 ## Usage
 
 Quando estiver no diretório de um projeto a ser auditado, execute:
@@ -42,7 +63,7 @@ Ou com parâmetros:
 
 ### 2. **Registra 8 Agents Especializados**
    ```
-   Agents carregados de: C:/Users/Jorge Paim/Desktop/audit-system/audit-system/agents/
+   Agents carregados de: $AUDIT_SYSTEM_PATH/agents/
 
    ✓ orchestrator.json         - Coordenador de workflows
    ✓ assumption-analyzer.json - Phase 1: Quebra de suposições
@@ -99,7 +120,12 @@ Ou com parâmetros:
      - cross-protocol-analysis/
    ```
 
-### 5. **Cria Estrutura de Output**
+### 5. **Detecta Linguagem do Projeto**
+   - Busca por arquivos `*.sol`, `Anchor.toml`, `Cargo.toml`, `*.rs`
+   - Define `AUDIT_LANG = solidity | rust | both`
+   - Se `both` e nenhum `--lang` passado, pergunta ao usuário
+
+### 6. **Cria Estrutura de Output**
    ```
    No projeto atual:
    ./audit-output/
@@ -109,15 +135,26 @@ Ou com parâmetros:
    └── report.md
    ```
 
-### 6. **Configura Variáveis de Ambiente**
+   Se `AUDIT_LANG == rust`:
    ```
-   AUDIT_SYSTEM_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system"
-   AUDIT_AGENTS_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system/agents"
-   AUDIT_SKILLS_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system/skills"
-   AUDIT_VAULT_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system/obsidian-vault"
+   ./audit-output/
+   ├── rust/
+   │   ├── findings/
+   │   ├── exploits/
+   │   ├── tests/
+   │   └── report.md
+   ```
+
+### 7. **Configura Variáveis de Ambiente**
+   ```
+   AUDIT_SYSTEM_PATH="<diretório do .audit-system/>"
+   AUDIT_AGENTS_PATH="$AUDIT_SYSTEM_PATH/agents"
+   AUDIT_SKILLS_PATH="$AUDIT_SYSTEM_PATH/skills"
+   AUDIT_VAULT_PATH="$AUDIT_SYSTEM_PATH/vault"
    AUDIT_MODEL="claude-opus-4-6"
    AUDIT_PROJECT_PATH="<diretório atual>"
    AUDIT_OUTPUT_PATH="./audit-output"
+   AUDIT_LANG="solidity | rust | both"
    ```
 
 ## Workflow de Integração
@@ -129,15 +166,17 @@ Ou com parâmetros:
         ↓
 [Carrega Config] ← config.json (model: claude-opus-4-6)
         ↓
-[Registra Agents] ← 8 agents de ./agents/
+[Detecta Linguagem] ← .sol → solidity | Cargo.toml+Anchor.toml → rust
+        ↓
+[Registra Agents] ← 8 agents de ./agents/ (modo LANG-aware)
         ↓
 [Carrega Skills] ← 5 skills de ./skills/
         ↓
-[Indexa Vault] ← knowledge base de ./obsidian-vault/
+[Indexa Vault] ← knowledge base de ./obsidian-vault/ (incl. Rust/Solana)
         ↓
-[Cria Output Dir] ← ./audit-output/
+[Cria Output Dir] ← ./audit-output/ (estrutura por linguagem)
         ↓
-[Sistema Conectado] ← Todos os recursos disponíveis
+[Sistema Conectado] ← AUDIT_LANG=solidity|rust|both
         ↓
 Escolha do agente → Execução → Resultados
 ```
@@ -148,18 +187,18 @@ Após conectar, os seguintes agentes podem ser invocados:
 
 | Agente | Comando | Descrição | Recursos Utilizados |
 |--------|---------|-----------|---------------------|
-| orchestrator | `/audit-agent full` | Coordena todos os agents | Todos os recursos |
-| assumption-analyzer | `/audit-agent assumption` | Phase 1: Mapeia e quebra suposições | novel-discovery.md (Phase 1), invariant-catalog/, hypotheses/_template.md |
-| economic-attacker | `/audit-agent economic` | Phase 3: Modelagem econômica | novel-discovery.md (seção econômica), vulnerabilities/flash-loan-attack.md |
-| state-machine-hacker | `/audit-agent state` | Phase 4: Análise de máquina de estados | novel-discovery.md (seção state machine), attack-patterns/, invariant-catalog/ |
-| composition-attacker | `/audit-agent composition` | Phase 5: Ataques por composição | novel-discovery.md (seção composition), vulnerabilities/, novel-patterns/ |
-| exploit-writer | `/audit-agent exploit` | Cria PoCs em Solidity | exploit-generator.md, test-strategies/ |
-| test-generator | `/audit-agent test` | Gera testes Foundry | test-generator.md, test-strategies/fuzzing.md |
-| report-writer | `/audit-agent report` | Compila relatórios | reports/_template.md, hypotheses/_template.md |
+| orchestrator | `/audit-agent full` | Coordena todos os agents (modo LANG-aware) | Todos os recursos |
+| assumption-analyzer | `/audit-agent assumption` | Phase 1: Mapeia e quebra suposições | novel-discovery.md, invariant-catalog/, hypotheses/ |
+| economic-attacker | `/audit-agent economic` | Phase 3: Modelagem econômica | novel-discovery.md, vulnerabilities/ |
+| state-machine-hacker | `/audit-agent state` | Phase 4: Análise de máquina de estados | novel-discovery.md, attack-patterns/, invariant-catalog/ |
+| composition-attacker | `/audit-agent composition` | Phase 5: Ataques por composição | novel-discovery.md, vulnerabilities/, novel-patterns/ |
+| exploit-writer | `/audit-agent exploit` | Cria PoCs (Solidity/Foundry ou Rust/Anchor) | exploit-generator.md, test-strategies/ |
+| test-generator | `/audit-agent test` | Gera testes (Foundry ou Anchor/cargo) | test-generator.md, test-strategies/ |
+| report-writer | `/audit-agent report` | Compila relatórios multi-linguagem | reports/_template.md |
 
 ## Como os Recursos se Interligam
 
-### Exemplo: assumption-analyzer em ação
+### Exemplo: assumption-analyzer em ação (Solidity)
 
 ```
 1. Usuário: /audit-agent assumption --target=./contracts/Pool.sol
@@ -167,7 +206,8 @@ Após conectar, os seguintes agentes podem ser invocados:
 2. Agente assumption-analyzer ativa:
    ├── Config: agents/assumption-analyzer.json
    ├── Modelo: claude-opus-4-6
-   ├── Prompts: skills/novel-discovery.md (Phase 1)
+   ├── LANG: solidity (auto-detectado)
+   ├── Prompts: skills/novel-discovery.md (Phase 1 - modo Solidity)
    ├── Contexto: obsidian-vault/invariant-catalog/defi-invariants.md
    └── Template: obsidian-vault/hypotheses/_template.md
 
@@ -179,24 +219,28 @@ Após conectar, os seguintes agentes podem ser invocados:
    └── Hipóteses formatadas pelo template
 ```
 
-### Exemplo: economic-attacker em ação
+### Exemplo: economic-attacker em ação (Rust/Solana)
 
 ```
-1. Usuário: /audit-agent economic --target=./contracts/
+1. Usuário: /audit-agent economic --target=./programs/amm/src/lib.rs
 
 2. Agente economic-attacker ativa:
    ├── Config: agents/economic-attacker.json
    ├── Modelo: claude-opus-4-6
-   ├── Prompts: skills/novel-discovery.md (seção econômica)
-   └── Contexto: obsidian-vault/vulnerabilities/flash-loan-attack.md
+   ├── LANG: rust (auto-detectado por Anchor.toml)
+   ├── Prompts: skills/novel-discovery.md (Phase 3 - modo Rust/Solana)
+   ├── Contexto: obsidian-vault/vulnerabilities/solana-account-confusion.md
+   └── Contexto: obsidian-vault/invariant-catalog/solana-invariants.md
 
-3. Agente modela ataques econômicos
+3. Agente analisa o programa AMM em Rust
 
 4. Output gerado:
-   ├── ./audit-output/economic-analysis-[timestamp].md
-   ├── Cálculos de expected value (EV)
-   └── Vetores de ataque economicamente viáveis
+   ├── ./audit-output/rust/economic-analysis-[timestamp].md
+   ├── Análise de ataques econômicos específicos Solana (CPI, PDA, SPL)
+   └── Vetores de ataque com Anchor/Sealevel
 ```
+
+
 
 ## Exemplos de Uso
 
@@ -231,7 +275,21 @@ Após conectar, os seguintes agentes podem ser invocados:
 /audit-agent full --target=./contracts/ --output=./audit-results/
 ```
 
-### Exemplo 5: Workflow específico
+### Exemplo 5: Auditoria Rust/Solana
+
+```
+# Auto-detecção
+/audit-connect
+/audit-agent full --target=./programs/
+
+# Ou forçando Rust
+/audit-connect --lang=rust
+/audit-agent assumption --target=./programs/amm/src/lib.rs
+/audit-agent economic --target=./programs/amm/
+/audit-agent exploit --target=./programs/amm/
+```
+
+### Exemplo 6: Workflow específico
 
 ```
 /audit-connect
@@ -247,7 +305,7 @@ Após conectar, os seguintes agentes podem ser invocados:
 Se o audit-system estiver em local diferente:
 
 ```
-/audit-connect --config-path="C:/caminho/para/audit-system"
+/audit-connect --config-path="<caminho-para-.audit-system>"
 ```
 
 ### Modos de operação
@@ -284,14 +342,26 @@ Para confirmar que TODOS os recursos estão conectados:
 /audit-status
 ```
 
-Saída esperada:
+Saída esperada (Solidity):
 ```
 ✓ Audit-System conectado
 ✓ Modelo: claude-opus-4-6
-✓ 8 agents registrados
+✓ Linguagem: solidity (auto-detectado)
+✓ 8 agents registrados (modo EVM)
 ✓ 5 skills carregadas
-✓ Vault indexado (14 arquivos)
+✓ Vault indexado (14+ arquivos)
 ✓ Output directory: ./audit-output/
+```
+
+Saída esperada (Rust/Solana):
+```
+✓ Audit-System conectado
+✓ Modelo: claude-opus-4-6
+✓ Linguagem: rust (auto-detectado via Anchor.toml)
+✓ 8 agents registrados (modo Solana/Sealevel)
+✓ 5 skills carregadas
+✓ Vault indexado (14+ arquivos, incluindo Solana)
+✓ Output directory: ./audit-output/rust/
 ```
 
 ## Related Resources
@@ -310,3 +380,6 @@ Saída esperada:
 - Resultados são salvos em `./audit-output/` por padrão
 - Cada agente pode ser chamado individualmente após a conexão
 - O orchestrator pode coordenar workflows multi-agente completos
+- A linguagem é auto-detectada, mas pode ser forçada com `--lang`
+- Em modo `rust`, agents focam em Solana/Anchor/Sealevel/ink!
+- Em modo `solidity`, agents focam em EVM/Solidity/Foundry

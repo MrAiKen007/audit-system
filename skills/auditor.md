@@ -1,7 +1,10 @@
 # Smart Contract Auditor Skill
 
 ## Role
-Senior Smart Contract Security Auditor with deep expertise in EVM, Solidity, and DeFi exploit mechanics.
+Senior Smart Contract Security Auditor with deep expertise in:
+- **EVM/Solidity:** Solidity, DeFi exploit mechanics, Foundry
+- **Solana/Rust:** Anchor, Sealevel, SPL, CPI, PDA, Borsh
+- **ink!/Polkadot:** Substrate, ink! smart contracts, FRAME
 
 ## Objective
 Systematically analyze smart contracts, identify vulnerabilities, rank severity, and generate actionable findings with reproducible PoC.
@@ -76,6 +79,91 @@ Systematically analyze smart contracts, identify vulnerabilities, rank severity,
 - [ ] Edge cases at boundaries (0, max uint)
 - [ ] Order of operations correct
 - [ ] Initialization protected
+
+---
+
+## Solana/Rust Audit Checklist
+
+### Account Model
+- [ ] All accounts expected by the instruction are checked
+- [ ] Account types are validated (not just Pubkey)
+- [ ] Owner check: `account.owner == program_id` on all program-owned accounts
+- [ ] Signer check: `Signer` or `is_signer` on all sensitive accounts
+- [ ] Writable check: `UncheckedAccount` not used where `AccountInfo` mut required
+- [ ] No account confusion (wrong account passed but same type)
+- [ ] `close` instruction correctly closes accounts (sends rent to correct destination)
+- [ ] Seeds/PDAs derived with correct seeds and bump
+- [ ] `AccountLoader` used correctly for large accounts
+
+### Cross-Program Invocation (CPI)
+- [ ] CPI returns checked and handled
+- [ ] Seeds passed in CPI signed correctly (PDA signing)
+- [ ] Reentrancy via CPI considered (malicious program called back)
+- [ ] No missing `invoke_signed` where PDA signing is needed
+- [ ] CPI to unknown/arbitrary programs restricted
+- [ ] Program ID passed from external input verified against expected
+
+### Borsh Deserialization
+- [ ] Custom `pack`/`unpack` implementations safe (no overflow)
+- [ ] Discriminator checked before deserializing accounts
+- [ ] Account length validated before unpacking
+- [ ] No `unsafe` deserialization without bounds checking
+- [ ] Padding bytes handled correctly
+- [ ] Enum variants validated (no out-of-bounds variant)
+
+### Arithmetic & Numeric
+- [ ] `Overflowing` math avoided or explicitly intended
+- [ ] Safe math via `checked_*`, `overflowing_*`, or `Saturating`/`Wrapping`
+- [ ] Integer division precision loss analyzed
+- [ ] Signed integer usage reviewed for unexpected behavior
+- [ ] Multiplication before division to preserve precision
+
+### PDA & Seeds
+- [ ] PDA seeds deterministic and unique
+- [ ] No two users can derive same PDA
+- [ ] Bump seed canonical (highest valid bump)
+- [ ] Seeded accounts not confused with user-provided accounts
+- [ ] `find_program_address` vs `create_program_address` used correctly
+
+### Signer & Authorization
+- [ ] All authority checks performed before state mutations
+- [ ] Delegation checks correct (SPL token `delegated_amount`)
+- [ ] `set_authority` instructions protected
+- [ ] Multi-signature setups validated
+- [ ] Owner/authority checks on SPL token accounts
+
+### Token Operations (SPL)
+- [ ] Token account ownership verified
+- [ ] Mint authority checks present
+- [ ] Close token accounts use correct destination
+- [ ] Associated token accounts (ATA) derived correctly
+- [ ] Token decimals handled consistently
+
+### Clock & Time
+- [ ] `Clock::get()` slot/timestamp assumptions documented
+- [ No reliance on exact block timestamps
+- [ ] Slot number used instead of timestamp where possible
+- [ ] Time-dependent logic bounded
+- [ ] No assumption about transaction ordering within slot
+
+### Unsafe Rust
+- [ ] `unsafe` blocks reviewed for memory safety
+- [ ] Raw pointer arithmetic avoided
+- [ ] `std::mem::transmute` usage verified
+- [ ] Union types safe
+- [ ] No undefined behavior (UB) reachable via crafted input
+
+### Close Account
+- [ ] Account data zeroed out or discriminator changed before close
+- [ ] Rent correctly claimed by closed account owner
+- [ ] No use-after-close (account recreated via same address)
+- [ ] Reinitialization attack prevented
+
+### Rent & Economics
+- [ ] Rent exemption checked
+- [ ] Lamport transfers reviewed for overflow
+- [ ] No lamport draining from program-owned accounts
+- [ ] Rent calculations correct
 
 ---
 

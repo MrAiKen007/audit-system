@@ -8,25 +8,58 @@ Este documento explica como **todos os recursos** (skills, agents, obsidian-vaul
 
 ```json
 {
-  "default_model": "claude-opus-4-6"
+  "default_model": "claude-opus-4-6",
+  "supported_languages": ["solidity", "rust"],
+  "default_language": "auto-detect"
 }
 ```
 
 Todos os agentes usam o modelo **Claude Opus 4.6** por padrão, garantindo máxima capacidade de raciocínio para análise de vulnerabilidades complexas.
 
+## Detecção de Linguagem
+
+O sistema detecta automaticamente a linguagem do projeto:
+
+| Sinal | Linguagem |
+|-------|-----------|
+| Arquivos `*.sol` | Solidity (EVM) |
+| `Anchor.toml` + `Cargo.toml` | Rust (Solana) |
+| `Cargo.toml` com `ink` | Rust (Polkadot) |
+| Ambos | Pergunta ao usuário |
+| Override `--lang=X` | Força modo específico |
+
+A variável `AUDIT_LANG` é passada para todos os agents, que ajustam seus prompts e outputs de acordo.
+
 ---
+
+## Instalação via npx
+
+```bash
+# Em qualquer máquina com Node.js >= 16:
+cd ~/projetos/meu-projeto
+npx audit-system connect
+```
+
+O `npx` baixa o pacote, detecta a linguagem do projeto e cria `.audit-system/` e `.claude/` automaticamente.
 
 ## Diagrama de Integração Completa
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         PROJETO SENDO AUDITADO                              │
-│                    (~/projetos/meu-defi-protocol/)                           │
 │                                                                             │
+│  ┌──────────────────┐  ┌─────────────────────┐                              │
+│  │  CONTRATO.sol    │  │  PROGRAMA Rust       │                              │
+│  │  (EVM/Solidity)  │  │  (Solana/ink!)      │                              │
+│  └──────────────────┘  └─────────────────────┘                              │
+│           │                        │                                        │
+│           └──────────┬─────────────┘                                        │
+│                      │                                                      │
 │  ┌──────────────┐    /audit-connect    ┌─────────────────────────────────┐  │
-│  │   CONTRATO   │ ═══════════════════▶│      SKILL: audit-connect      │  │
-│  │   ALVO.sol   │                       │  (ativador do sistema)        │  │
-│  └──────────────┘                       └─────────────────────────────────┘  │
+│  │ AUTO-DETECT  │ ═══════════════════▶│      SKILL: audit-connect      │  │
+│  │ LANG=solidity│                     │  (ativador do sistema)          │  │
+│  │ ou LANG=rust │                     │  Define AUDIT_LANG              │  │
+│  └──────────────┘                      └─────────────────────────────────┘  │
 │                                                    │                        │
 └────────────────────────────────────────────────────┼────────────────────────┘
                                                      │
@@ -34,7 +67,7 @@ Todos os agentes usam o modelo **Claude Opus 4.6** por padrão, garantindo máxi
                           │                          ▼                          │
                           │  ┌─────────────────────────────────────────────────┐  │
                           │  │           AUDIT-SYSTEM CONECTADO             │  │
-                          │  │   (C:/Users/Jorge Paim/Desktop/audit-system)  │  │
+                           │  │   ($AUDIT_SYSTEM_PATH)                       │  │
                           │  └─────────────────────────────────────────────────┘  │
                           │                          │                            │
                           │          ┌───────────────┼───────────────┐            │
@@ -89,11 +122,13 @@ Quando você executa `/audit-connect` em um projeto:
 ├─────────────────────────────────────────────────────────────┤
 │  1. Detecta o caminho do audit-system                      │
 │  2. Carrega config.json (incluindo default_model)          │
-│  3. Registra os 8 AGENTS disponíveis                       │
-│  4. Carrega o SKILLS directory no contexto                   │
-│  5. Indexa o OBSIDIAN-VAULT para consulta                  │
-│  6. Cria ./audit-output/ no projeto                         │
-│  7. Estabelece variáveis de ambiente                         │
+│  3. DETECTA LINGUAGEM DO PROJETO (.sol vs Cargo.toml)     │
+│     → Define AUDIT_LANG = solidity | rust | both           │
+│  4. Registra os 8 AGENTS disponíveis (modo LANG-aware)     │
+│  5. Carrega o SKILLS directory no contexto                   │
+│  6. Indexa o OBSIDIAN-VAULT (EVM + Solana)                 │
+│  7. Cria ./audit-output/ ou ./audit-output/rust/           │
+│  8. Estabelece variáveis de ambiente (incl. AUDIT_LANG)     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -101,16 +136,16 @@ Quando você executa `/audit-connect` em um projeto:
 
 Cada agente é um **especialista** configurado em `agents/*.json`:
 
-| Agente | Tipo | Recursos que Usa |
-|--------|------|------------------|
-| `orchestrator` | coordinator | Todos os outros agents |
-| `assumption-analyzer` | specialist | `novel-discovery.md`, `invariant-catalog/` |
-| `economic-attacker` | specialist | `novel-discovery.md` (seção econômica), `vulnerabilities/flash-loan` |
-| `state-machine-hacker` | specialist | `novel-discovery.md` (seção state machine), `attack-patterns/` |
-| `composition-attacker` | specialist | `novel-discovery.md` (seção composition), `vulnerabilities/` |
-| `exploit-writer` | implementer | `exploit-generator.md`, `test-strategies/` |
-| `test-generator` | implementer | `test-generator.md`, `test-strategies/fuzzing` |
-| `report-writer` | documenter | `reports/_template.md`, `hypotheses/_template.md` |
+| Agente | Tipo | LANG-aware | Recursos que Usa |
+|--------|------|-----------|------------------|
+| `orchestrator` | coordinator | ✅ | Todos os outros agents (passa AUDIT_LANG) |
+| `assumption-analyzer` | specialist | ✅ | `novel-discovery.md`, `invariant-catalog/` |
+| `economic-attacker` | specialist | ✅ | `novel-discovery.md`, `vulnerabilities/` |
+| `state-machine-hacker` | specialist | ✅ | `novel-discovery.md`, `attack-patterns/` |
+| `composition-attacker` | specialist | ✅ | `novel-discovery.md`, `vulnerabilities/` |
+| `exploit-writer` | implementer | ✅ | `exploit-generator.md` (Solidity ou Rust) |
+| `test-generator` | implementer | ✅ | `test-generator.md` (Foundry ou Anchor) |
+| `report-writer` | documenter | ✅ | `reports/_template.md` |
 
 ### 3. SKILLS (Os Prompts Especializados)
 
@@ -137,14 +172,20 @@ O vault é **consultado** pelos agents durante a análise:
 ```
 obsidian-vault/
 ├── vulnerabilities/          ← Consultado por todos os agents
-│   ├── reentrancy.md       ← Referência para composition-attacker
-│   ├── access-control.md   ← Referência para assumption-analyzer
+│   ├── reentrancy.md       ← EVM + Solana CPI variant
+│   ├── access-control.md   ← EVM + Solana signer checks
 │   ├── oracle-manipulation ← Referência para economic-attacker
-│   └── flash-loan-attack.md ← Referência para economic-attacker
+│   ├── flash-loan-attack.md ← Referência para economic-attacker
+│   ├── solana-account-confusion.md  ← Solana-specific ⭐
+│   ├── solana-cpi-attacks.md        ← Solana-specific ⭐
+│   ├── solana-signer-authorization.md ← Solana-specific ⭐
+│   ├── solana-close-account.md       ← Solana-specific ⭐
+│   └── rust-unsafe-deserialization.md ← Rust-specific ⭐
 ├── hypotheses/             ← Usado por assumption-analyzer
 │   └── _template.md        ← Template para novas hipóteses
 ├── invariant-catalog/      ← Usado por state-machine-hacker
-│   └── defi-invariants.md  ← Lista de invariantes para testar
+│   ├── defi-invariants.md  ← Lista de invariantes DeFi (EVM)
+│   └── solana-invariants.md ← Lista de invariantes Solana ⭐
 ├── novel-patterns/         ← Usado por composition-attacker
 │   └── pattern-mutation-framework.md
 ├── attack-patterns/        ← Usado por state-machine-hacker
@@ -292,10 +333,10 @@ Se aparecerem os 8 agentes listados, todos os recursos estão conectados.
 Após `/audit-connect`, estas variáveis são definidas:
 
 ```bash
-AUDIT_SYSTEM_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system"
-AUDIT_AGENTS_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system/agents"
-AUDIT_SKILLS_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system/skills"
-AUDIT_VAULT_PATH="C:/Users/Jorge Paim/Desktop/audit-system/audit-system/obsidian-vault"
+AUDIT_SYSTEM_PATH="./.audit-system"
+AUDIT_AGENTS_PATH="./.audit-system/agents"
+AUDIT_SKILLS_PATH="./.audit-system/skills"
+AUDIT_VAULT_PATH="./.audit-system/vault"
 AUDIT_MODEL="claude-opus-4-6"
 AUDIT_PROJECT_PATH="<diretório atual>"
 AUDIT_OUTPUT_PATH="./audit-output"

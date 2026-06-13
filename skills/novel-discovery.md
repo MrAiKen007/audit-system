@@ -7,6 +7,8 @@ type: skill
 ## Role
 Smart Contract Security Researcher specializing in discovering previously unknown vulnerability classes and attack vectors through systematic assumption breaking and creative reasoning.
 
+**Línguas Suportadas:** Solidity (EVM) e Rust (Solana/Anchor, ink!/Substrate)
+
 ## Objective
 Go beyond known vulnerability patterns to discover novel attack vectors that automated scanners and checklists miss. **DESTROY the developer's assumptions.**
 
@@ -276,6 +278,112 @@ Option E: Pausable token
 For each option, show exactly how the protocol breaks.
 
 Target contract: [PASTE]
+```
+
+---
+
+### 7. Ataque por Account Confusion (Rust/Solana)
+
+```
+You are a Solana security researcher specializing in account confusion vulnerabilities.
+
+The Solana account model requires the program to validate every account passed.
+Unlike EVM where storage is internal, Solana accounts are passed as inputs.
+
+For this Anchor/Solana program:
+
+1. ACCOUNT MAPPING: List every account expected by each instruction
+2. TYPE CONFUSION: Which accounts could be swapped with another of the same type?
+3. OWNER CHECK: Which accounts miss owner validation?
+4. SIGNER CHECK: Which accounts should be signers but aren't checked?
+5. WRITABLE CHECK: Which accounts should be writable but aren't?
+6. PDA CONFUSION: Where could a user-controlled account be passed instead of a PDA?
+
+For each finding:
+CONFUSION: [what the developer assumed would be passed]
+ATTACK: [what the attacker actually passes instead]
+IMPACT: [what breaks as a result]
+
+Target program: [PASTE RUST PROGRAM]
+```
+
+---
+
+### 8. Ataque por CPI Malicioso (Rust/Solana)
+
+```
+You are a Solana CPI exploitation specialist.
+
+Cross-Program Invocation (CPI) allows programs to call other programs.
+This creates trust assumptions that can be exploited.
+
+Analyze each CPI call in this program:
+
+1. CPI TARGET: What program is being called?
+2. TRUST MODEL: Why does the caller trust this program?
+3. UNCHECKED CPI: Can the attacker control WHICH program is called?
+4. CPI REENTRANCY: Can the called program call back into this one?
+5. PDA SIGNING: Are PDA seeds passed correctly for signing?
+6. RETURN VALUE: Is the CPI return checked?
+
+For each dangerous CPI:
+CPI_SITE: [line number and function]
+ATTACK: [how to exploit this CPI]
+MIGATION: [how to fix]
+
+Target program: [PASTE RUST PROGRAM]
+```
+
+---
+
+### 9. Ataque por Unsafe Rust (Rust/Solana/ink!)
+
+```
+You are a Rust unsafe code security auditor.
+
+Smart contracts in Rust (Solana, ink!) sometimes use unsafe Rust
+for performance, bypassing safety guarantees.
+
+Analyze every `unsafe` block:
+
+1. POINTER ARITHMETIC: Is raw pointer math bounded?
+2. TRANSMUTE: Is std::mem::transmute safe for the types involved?
+3. UNION: Are union fields accessed correctly?
+4. BORSH CUSTOM: Is custom pack/unpack safe?
+5. DEREF: Is unsafe dereference bounded?
+6. MEMORY: Could crafted input cause undefined behavior?
+
+For each unsafe block:
+UNSAFE_LOCATION: [file:line]
+RISK: [what can go wrong]
+EXPLOITABILITY: [can an attacker trigger this?]
+SAFE_ALTERNATIVE: [how to avoid unsafe]
+
+Target program: [PASTE RUST PROGRAM]
+```
+
+---
+
+### 10. Ataque por Reinitialization (Rust/Solana)
+
+```
+You are a Solana security researcher.
+
+Solana accounts can be reused after closing. If a program
+doesn't check if an account is already initialized, an attacker
+can reinitialize a closed account to gain unauthorized access.
+
+Check for:
+1. DISCRIMINATOR CHECK: Does every instruction verify the account discriminator?
+2. INITIALIZED FLAG: Is there a boolean `initialized` field?
+3. ACCOUNT SIZE: Can closing and reopening change account interpretation?
+4. VERSION CHECK: Is there a version field that prevents downgrade?
+
+Output format:
+REINIT_VECTORS:
+- [Instruction] | [Account] | [Attack] | [Severity]
+
+Target program: [PASTE RUST PROGRAM]
 ```
 
 ---
